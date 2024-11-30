@@ -1,39 +1,51 @@
 class JBFisher {
 
-    static main = () => {
+    static DOMAINS = {
+        PLUGIN: 'plugins.jetbrains.com',
+        PLUGIN_NEW: 'downloads.marketplace.jetbrains.com',
+        BINARY: 'download.jetbrains.com',
+        BINARY_NEW: 'download-cdn.jetbrains.com',
+    };
 
-        const URL_DOWNLOADS = 'plugins.jetbrains.com';
-        const URL_PLUGINS = 'download.jetbrains.com';
+    static main = () => this.#handleRedirect();
 
-        const init = () => {
-            switch (true) {
-                case imHere(URL_DOWNLOADS):
-                    redirectPlugins();
-                    break;
-                case imHere(URL_PLUGINS):
-                    redirectDownloads();
-                    break;
-                default:
-                    break;
-            }
+    static #handleRedirect() {
+        switch (true) {
+            case this.#isCurrentDomain(this.DOMAINS.PLUGIN):
+                this.#redirectPlugin();
+                break;
+            case this.#isCurrentDomain(this.DOMAINS.BINARY):
+                this.#redirectBinary();
+                break;
+            default:
+                break;
         }
-
-        const imHere = (url) => location.origin.includes(`://${url}`);
-
-        const redirectPlugins = () => {
-            const isValidPath = location.pathname.includes('/files/') && location.search.includes('pluginId=');
-            if (isValidPath) {
-                location.href = `https://downloads.marketplace.jetbrains.com${location.pathname}${location.search}`;
-            }
-        }
-
-        const redirectDownloads = () => {
-            const newOrigin = location.origin.replace('download.jetbrains.com', 'download-cdn.jetbrains.com');
-            location.href = `${newOrigin}${location.pathname}${location.search}`;
-        }
-
-        init();
     }
+
+    static #isCurrentDomain = (domain) => location.origin.includes(`://${domain}`);
+
+    static #redirectPlugin() {
+        if (this.#isValidPluginPage()) {
+            const newUrl = this.#buildNewPluginUrl()
+            this.#redirect(newUrl);
+        }
+    }
+
+    static #isValidPluginPage = () => location.pathname.includes('/files/') && location.search.includes('pluginId=');
+
+    static #buildNewPluginUrl = () => `https://${this.DOMAINS.PLUGIN_NEW}${location.pathname}${location.search}`;
+
+    static #redirectBinary() {
+        const newUrl = this.#buildNewBinaryUrl();
+        this.#redirect(newUrl);
+    }
+
+    static #buildNewBinaryUrl() {
+        const newOrigin = location.origin.replace(this.DOMAINS.BINARY, this.DOMAINS.BINARY_NEW);
+        return `${newOrigin}${location.pathname}${location.search}`;
+    }
+
+    static #redirect = (href) => location.href = href;
 
 }
 
